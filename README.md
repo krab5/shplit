@@ -1,0 +1,2 @@
+# shplit
+Clipboard content splitter
