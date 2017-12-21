@@ -1,0 +1,136 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+    shplit
+
+Split the content of the clipboard using provided separator
+
+=head1 SYNOPSIS
+    
+    shplit
+    shplit ","
+    shplit -r -s -e ";"
+
+=head1 DESCRIPTION
+
+This simple script takes the content of the clipboard and splits it using
+the provided character/string as separator.
+
+=head1 OPTIONS
+
+=over 12
+
+=item -r
+
+Use the given separator as a I<regular expression>. When no separator is given, "\s" is implied.
+
+=item -s
+
+Show the start of each line (with a $ sign).
+
+=item -e
+
+Show the end of each line (with a % sign).
+
+=item -h
+
+Show help.
+
+=back
+
+=head1 AUTHOR
+
+    krab.
+
+=cut
+
+use Term::ANSIColor;
+use Clipboard;
+
+my $regexmode;
+my $showstart;
+my $showeol;
+my $sep;
+foreach (@ARGV) {
+    if ($_ eq "-r") {
+        $regexmode = 1;
+    } elsif ($_ eq "-s") {
+        $showstart = 1;
+    } elsif ($_ eq "-e") {
+        $showeol = 1;
+    } elsif ($_ eq "-h") {
+        print <<HELP_END, "\n";
+NAME
+
+    shplit
+
+Split the content of the clipboard using provided separator
+
+SYNOPSIS
+    
+    shplit
+    shplit ","
+    shplit -r -s -e ";"
+
+DESCRIPTION
+
+This simple script takes the content of the clipboard and splits it using
+the provided character/string as separator.
+
+OPTIONS
+
+    -r           Use the given separator as a regular expression.
+                 When no separator is given, "\\s" is implied.
+    
+    -s           Show the start of each line (with a $ sign).
+
+    -e           Show the end of each line (with a % sign).
+
+    -h           Show help.
+
+AUTHOR
+
+    krab.
+
+
+HELP_END
+        exit(0);
+    } elsif (not defined $sep) {
+        $sep = $_;
+    } else {
+        warn "Unknown option '$_'; ignored.";
+    }
+}
+
+if (not defined $sep) {
+    $sep = (defined $regexmode ? '\s' : ' ');
+}
+
+my $clip = Clipboard->paste or die "Nothing in the clipboard";
+my @separated;
+if (defined $regexmode) {
+    @separated = split(qr/$sep/, "$clip");
+} else {
+    @separated = split("$sep", "$clip");
+}
+print colored("*** Splitting clipboard content with ", "blue"),
+      colored((defined $regexmode ? "/" : "'"), "bright_blue"),
+      colored("$sep", "bright_blue"),
+      colored((defined $regexmode ? "/" : "'"), "bright_blue"),
+      colored(" ***", "blue"),
+      "\n";
+foreach (@separated) {
+    if (defined $showstart) {
+        print colored('$', "bold black on_bright_blue");
+    }
+    print;
+    if (defined $showeol) {
+        print colored('%', "bold black on_bright_blue");
+    }
+    print "\n";
+}
+print colored("*** END ***", "blue"),
+      "\n";
+
+
